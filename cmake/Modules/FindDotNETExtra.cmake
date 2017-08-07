@@ -15,9 +15,9 @@
 function(add_assemblies _TARGET_NAME)
 
   cmake_parse_arguments(_add_assemblies
-    ""
+    "USE_DOTNET_CORE"
     "OUTPUT_DIR;OUTPUT_TYPE;OUTPUT_NAME"
-    "SOURCES;INCLUDE_ASSEMBLIES_DLL;INCLUDE_ASSEMBLIES_NUGET"
+    "SOURCES;REFERENCE_ASSEMBLIES;INCLUDE_ASSEMBLIES_DLL;INCLUDE_ASSEMBLIES_NUGET;COMPILER_ARGS"
     ${ARGN}
   )
 
@@ -150,6 +150,7 @@ if(WIN32)
     add_custom_target(${_TARGET_NAME} ALL DEPENDS ${_nuget_output_path})
   endif()
 else()
+  if(_add_assemblies_USE_DOTNET_CORE)
   set(_assembly_nuget_output_path "${CMAKE_CURRENT_BINARY_DIR}/bin/${PROJECT_NAME}.dll")
   set(_assembly_nuget_output_path "${CMAKE_CURRENT_BINARY_DIR}/bin/${PROJECT_NAME}.1.0.0.nupkg")
 
@@ -247,6 +248,48 @@ else()
 
   add_custom_target(${_TARGET_NAME} ALL DEPENDS ${_TARGET_NAME}_pack)
 
+    else()
+        MESSAGE("Using mono")
+
+        set(ALL_COMPILER_ARGS
+            ${_add_assemblies_COMPILER_ARGS}
+            "-out:${OUTPUT_NAME}")
+        if(NOT ${_add_assemblies_REFERENCE_ASSEMBLIES})
+            set(EXT_ASSEMBLIES
+                "-r:${_add_assemblies_REFERENCE_ASSEMBLIES}")
+        endif()
+
+        set(AMENT_PREFIX_PATH_ADPATED $ENV{AMENT_PREFIX_PATH})
+        MESSAGE(${AMENT_PREFIX_PATH_ADPATED})
+        string(REPLACE ":" ";" AMENT_PREFIX_PATH_ADPATED ${AMENT_PREFIX_PATH_ADPATED})
+
+        foreach(PREFIX_PATH ${AMENT_PREFIX_PATH_ADPATED})
+            list(APPEND LIB_RCLCS_PATH ${PREFIX_PATH}/lib)
+            MESSAGE(${PREFIX_PATH})
+        endforeach()
+        MESSAGE(${LIB_RCLCS_PATH})
+        if(OUTPUT_TYPE STREQUAL "Library")
+            list(APPEND ALL_COMPILER_ARGS "-target:library")
+            set(OUTPUT_NAME_EXT "${OUTPUT_NAME}.dll")
+            set(_assembly_dll_output_path "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_NAME_EXT}")
+        else()
+            list(APPEND ALL_COMPILER_ARGS "-target:exe")
+            set(OUTPUT_NAME_EXT "${OUTPUT_NAME}.exe")
+            set(_assembly_exe_output_path "${CMAKE_CURRENT_BINARY_DIR}/${OUTPUT_NAME_EXT}")
+        endif()
+
+        add_custom_target(
+            ${_TARGET_NAME} ALL
+            COMMAND mcs "-out:${OUTPUT_NAME_EXT}" "-lib:${LIB_RCLCS_PATH}" "${EXT_ASSEMBLIES}" ${ALL_COMPILER_ARGS} ${CS_SOURCES}
+            VERBATIM
+        )
+        add_custom_target(
+            ${_TARGET_NAME}_rename ALL
+            COMMAND mv "${OUTPUT_NAME}" "${OUTPUT_NAME_EXT}"
+            DEPENDS ${_TARGET_NAME}
+        )
+
+    endif(_add_assemblies_USE_DOTNET_CORE)
 
 endif()
 
@@ -260,15 +303,15 @@ endif()
                 ${_assembly_dll_output_path}
                 ${_assembly_nuget_output_path}
     )
-
-    set_property(
-        TARGET
-            ${_TARGET_NAME}
-        PROPERTY
+    if(NOT USE_DOTNET_CORE)
+        set_property(
+            TARGET
+                ${_TARGET_NAME}
+            PROPERTY
             ASSEMBLIES_NUGET_FILE
                 ${_assembly_nuget_output_path}
     )
-
+    endif()
     set_property(
         TARGET
             ${_TARGET_NAME}
