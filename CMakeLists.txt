@@ -13,5 +13,5 @@ ament_package(
   CONFIG_EXTRAS "dotnet_cmake_module-extras.cmake.in"
 )
 
-install(DIRECTORY cmake resource
+install(DIRECTORY cmake
   DESTINATION share/${PROJECT_NAME})
