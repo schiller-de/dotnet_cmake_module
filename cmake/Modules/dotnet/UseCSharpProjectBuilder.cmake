@@ -27,51 +27,55 @@ function(csharp_add_project name)
 
     foreach(it ${_csharp_add_project_INCLUDE_DLLS})
         file(TO_NATIVE_PATH ${it} nit)
-        set(refs "${refs} <Reference Include=\"${nit}\" />\n")
+        list(APPEND refs "<Reference;Include=\\\"${nit}\\\";/>")
     endforeach()
 
     foreach(it ${_csharp_add_project_INCLUDE_NUPKGS})
         file(TO_NATIVE_PATH ${it} nit)
-        set(pkgs "${pkgs} <package id=\"${nit}\" version= />\n")
+        list(APPEND pkgs "<package;id=\\\"${nit}\\\";version=;/>")
     endforeach()
 
     foreach(it ${_csharp_add_project_INCLUDE_REFERENCES})
         string(REPLACE "=" ";" PACKAGE_ID "${it}")
         list(GET PACKAGE_ID 0 PACKAGE_NAME)
         list(GET PACKAGE_ID 1 PACKAGE_VERSION)
-        set(packages "${packages}<PackageReference Include=\"${PACKAGE_NAME}\" Version=\"${PACKAGE_VERSION}\" />\n")
-        set(legacy_packages "${legacy_packages}<package id=\"${PACKAGE_NAME}\" version=\"${PACKAGE_VERSION}\" />\n")
+        list(APPEND packages "<PackageReference;Include=\\\"${PACKAGE_NAME}\\\";Version=\\\"${PACKAGE_VERSION}\\\";/>")
+        list(APPEND legacy_packages "<package;id=\\\"${PACKAGE_NAME}\\\";version=\\\"${PACKAGE_VERSION}\\\";/>")
         file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${PACKAGE_NAME}.${PACKAGE_VERSION}/lib/**/*.dll" hint_path)
-        set(refs "${refs}<Reference Include=\"${hint_path}\" ></Reference>\n")
+        list(APPEND refs "<Reference;Include=\\\"${hint_path}\\\";></Reference>")
 
         file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${PACKAGE_NAME}.${PACKAGE_VERSION}/build/${PACKAGE_NAME}.targets" target_path)
-        set(imports "${imports}<Import Project=\"${target_path}\" Condition=\"Exists('${target_path}')\" />\n")
+        list(APPEND imports "<Import;Project=\\\"${target_path}\\\";Condition=\\\"Exists('${target_path}')\\\";/>")
     endforeach()
 
     foreach(it ${_csharp_sources})
         if(EXISTS "${it}")
             file(TO_NATIVE_PATH ${it} nit)
-            set(sources "${sources}<Compile Include=\"${nit}\" />\n")
+            list(APPEND sources "<Compile;Include=\\\"${nit}\\\";/>")
             list(APPEND sources_dep ${it})
         elseif(EXISTS "${CSBUILD_SOURCE_DIRECTORY}/${it}")
             file(TO_NATIVE_PATH ${CSHARP_SOURCE_DIRECTORY}/${it} nit)
-            set(sources "${sources}<Compile Include=\"${nit}\" />\n")
+            list(APPEND sources "<Compile;Include=\\\"${nit}\\\";/>")
             list(APPEND sources_dep ${CSHARP_SOURCE_DIRECTORY}/${it})
         elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${it}")
-            file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${it} nit)
-            set(sources "${sources}<Compile Include=\"${nit}\" />\n")
+            if(DOTNET_FOUND)
+                string(REPLACE "/" "\\" nit "${CMAKE_CURRENT_SOURCE_DIR}/${it}")
+            else()
+                file(TO_NATIVE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/${it} nit)
+            endif()
+            list(APPEND sources "<Compile;Include=\\\"${nit}\\\";/>")
             list(APPEND sources_dep ${CMAKE_CURRENT_SOURCE_DIR}/${it})
         elseif(${it} MATCHES "[*]")
             file(TO_NATIVE_PATH ${it} nit)
             FILE(GLOB it_glob ${it})
-            set(sources "${sources}<Compile Include=\"${nit}\" />\n")
+            list(APPEND sources "<Compile;Include=\\\"${nit}\\\";/>")
             list(APPEND sources_dep ${it_glob})
         else()
             get_property(_is_generated SOURCE ${it} PROPERTY GENERATED)
             if(_is_generated)
                 file(TO_NATIVE_PATH ${it} nit)
                 FILE(GLOB it_glob ${it})
-                set(sources "${sources}<Compile Include=\"${nit}\" />\n")
+                list(APPEND sources "<Compile;Include=\\\"${nit}\\\";/>")
                 list(APPEND sources_dep ${it_glob})
             else()
                 message(WARNING "not found ${it}")
@@ -120,7 +124,7 @@ function(csharp_add_project name)
         set(output_type "library")
     endif()
     # TODO: <RuntimeIdentifier>osx.10.11-x64</RuntimeIdentifier>
-    set(CSBUILD_${name}_BINARY "${CSHARP_BUILDER_OUTPUT_PATH}/${CSBUILD_OUPUT_PREFIX}${name}${CSBUILD_OUTPUT_SUFFIX}.${ext}")
+    set(CSBUILD_${name}_BINARY "${CSHARP_BUILDER_OUTPUT_PATH}/${CSBUILD_OUTPUT_PREFIX}${name}${CSBUILD_OUTPUT_SUFFIX}.${ext}")
     set(CSBUILD_${name}_BINARY_NAME "${name}${CSBUILD_OUTPUT_SUFFIX}.${ext}")
     if(CSHARP_NUGET_SOURCE)
         set(CSHARP_NUGET_SOURCE_CMD -source ${CSHARP_NUGET_SOURCE})
@@ -135,26 +139,34 @@ function(csharp_add_project name)
     set(CSBUILD_${name}_CSPROJ "${name}_${CSBUILD_CSPROJ}")
     file(TO_NATIVE_PATH ${CSHARP_BUILDER_OUTPUT_PATH} CSHARP_BUILDER_OUTPUT_PATH_NATIVE)
 
-    set(CSHARP_BUILDER_OUTPUT_TYPE "${output_type}")
-    set(CSHARP_BUILDER_OUTPUT_PATH "${CSHARP_BUILDER_OUTPUT_PATH_NATIVE}")
-    set(CSHARP_BUILDER_OUTPUT_NAME "${name}${CSBUILD_OUTPUT_SUFFIX}")
-    set(MSBUILD_TOOLSET "${MSBUILD_TOOLSET}")
-    set(CSHARP_IMPORTS "${CSHARP_IMPORTS}")
+    add_custom_target(
+        ${name} ALL
+        ${CMAKE_COMMAND}
+        -DCSHARP_TARGET_FRAMEWORK="${CSHARP_TARGET_FRAMEWORK}"
+        -DCSHARP_BUILDER_OUTPUT_TYPE="${output_type}"
+        -DCSHARP_BUILDER_OUTPUT_PATH="${CSHARP_BUILDER_OUTPUT_PATH_NATIVE}"
+        -DCSHARP_PLATFORM="${CSHARP_PLATFORM}"
+        -DCSHARP_BUILDER_OUTPUT_NAME="${name}${CSBUILD_OUTPUT_SUFFIX}"
+        -DCSHARP_BUILDER_ADDITIONAL_REFERENCES="${CSHARP_BUILDER_ADDITIONAL_REFERENCES}"
+        -DCSHARP_BUILDER_SOURCES="${CSHARP_BUILDER_SOURCES}"
+        -DCSHARP_TARGET_FRAMEWORK_VERSION="${CSHARP_TARGET_FRAMEWORK_VERSION}"
+        -DCSHARP_PACKAGE_REFERENCES="${CSHARP_PACKAGE_REFERENCES}"
+        -DMSBUILD_TOOLSET="${MSBUILD_TOOLSET}"
+        -DCSHARP_IMPORTS="${CSHARP_IMPORTS}"
+        -DCONFIG_INPUT_FILE="${CSBUILD_CSPROJ_IN}"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${CSBUILD_${name}_CSPROJ}"
+        -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
-    configure_file(
-        ${CSBUILD_CSPROJ_IN}
-        ${CURRENT_TARGET_BINARY_DIR}/${CSBUILD_${name}_CSPROJ} @ONLY
-    )
+        COMMAND ${CMAKE_COMMAND}
+        -DCSHARP_PACKAGE_REFERENCES="${CSHARP_LEGACY_PACKAGE_REFERENCES}"
+        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/packages.config.in"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/packages.config"
+        -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
-    set(CSHARP_PACKAGE_REFERENCES "${CSHARP_LEGACY_PACKAGE_REFERENCES}")
-
-    configure_file(
-        ${dotnet_cmake_module_DIR}/Modules/dotnet/packages.config.in
-        ${CURRENT_TARGET_BINARY_DIR}/packages.config @ONLY
-    )
-
-    add_custom_command(
-        OUTPUT ${CSBUILD_${name}_BINARY}
+        COMMAND ${CMAKE_COMMAND}
+        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/Directory.Build.props"
+        -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${RESTORE_CMD}
 
@@ -162,17 +174,19 @@ function(csharp_add_project name)
         COMMAND ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ}
         WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}
         COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ} -> ${CURRENT_TARGET_BINARY_DIR}"
-        DEPENDS ${sources_dep} ${CURRENT_TARGET_BINARY_DIR}/${CSBUILD_${name}_CSPROJ} ${CURRENT_TARGET_BINARY_DIR}/packages.config
+        DEPENDS ${sources_dep}
     )
 
-    add_custom_target(${name} ALL DEPENDS ${CSBUILD_${name}_BINARY})
+    set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/netcoreapp2.0/publish/)
 
     set_target_properties(${name}
         PROPERTIES
         EXECUTABLE
         ${_csharp_add_project_EXECUTABLE}
         OUTPUT_PATH
-        ${CSBUILD_${name}_BINARY}
+        ${DOTNET_OUTPUT_PATH}
+        OUTPUT_NAME
+        ${name}${CSBUILD_OUTPUT_SUFFIX}.${ext}
         DOTNET_CORE
         ${DOTNET_CORE_FOUND}
     )

@@ -1,4 +1,4 @@
-# Copyright 2016 Esteve Fernandez <esteve@apache.org>
+# Copyright 2016-2018 Esteve Fernandez <esteve@apache.org>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -61,8 +61,8 @@ endfunction()
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)
+    get_target_property(_target_name ${_TARGET_NAME} OUTPUT_NAME)
     get_target_property(_target_dotnet_core ${_TARGET_NAME} DOTNET_CORE)
-    get_filename_component(_target_directory ${_target_path} DIRECTORY)
 
     if (ARGC EQUAL 2)
       set (_DESTINATION ${ARGV1})
@@ -78,26 +78,29 @@ function(install_dotnet _TARGET_NAME)
         message(SEND_ERROR "install_dotnet: ${_TARGET_NAME}: DESTINATION must be specified.")
       endif()
     endif()
-    install(DIRECTORY ${_target_directory}/ DESTINATION ${_DESTINATION})
+    install(DIRECTORY ${_target_path}/ DESTINATION ${_DESTINATION})
 
     if(_target_executable)
-      set(DOTNET_DLL_PATH ${_target_path})
+      set(DOTNET_DLL_PATH ${_target_name})
       if(WIN32)
         configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.windows.in lib/${_TARGET_NAME}.bat @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}.bat
+          DESTINATION
+          lib/${PROJECT_NAME})
       else()
         configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.unix.in lib/${_TARGET_NAME} @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}
+          DESTINATION
+          lib/${PROJECT_NAME}
+          PERMISSIONS
+          OWNER_READ
+          OWNER_WRITE
+          OWNER_EXECUTE
+          GROUP_READ
+          GROUP_EXECUTE
+          WORLD_READ
+          WORLD_EXECUTE
+        )
       endif()
     endif()
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}
-      DESTINATION
-      lib/${PROJECT_NAME}
-      PERMISSIONS
-      OWNER_READ
-      OWNER_WRITE
-      OWNER_EXECUTE
-      GROUP_READ
-      GROUP_EXECUTE
-      WORLD_READ
-      WORLD_EXECUTE
-    )
 endfunction()
