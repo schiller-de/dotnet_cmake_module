@@ -30,7 +30,7 @@ find_program(XBUILD_EXECUTABLE xbuild)
 if(WIN32)
     set(MONO_CLR "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Novell\\Mono;DefaultCLR]")
     get_filename_component(csharp_mono_bin_hints "[HKEY_LOCAL_MACHINE\\SOFTWARE\\Novell\\Mono\\${MONO_CLR};SdkInstallRoot]/bin" ABSOLUTE)
-elseif(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     set(csharp_mono_bin_hints
             "/Library/Frameworks/Mono.framework/Commands"
             "/usr"

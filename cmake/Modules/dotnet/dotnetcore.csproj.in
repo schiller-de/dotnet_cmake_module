@@ -5,7 +5,6 @@
    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
    <OutputType>@CSHARP_BUILDER_OUTPUT_TYPE@</OutputType>
    <OutputPath>@CSHARP_BUILDER_OUTPUT_PATH@</OutputPath>
-   <PlatformTarget>@CSHARP_PLATFORM@</PlatformTarget>
    <AssemblyName>@CSHARP_BUILDER_OUTPUT_NAME@</AssemblyName>
   </PropertyGroup>
 
