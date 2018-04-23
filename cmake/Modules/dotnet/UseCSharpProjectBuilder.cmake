@@ -177,7 +177,7 @@ function(csharp_add_project name)
         DEPENDS ${sources_dep}
     )
 
-    set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/netcoreapp2.0/publish/)
+    set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/netcoreapp2.0/${DOTNET_CORE_RUNTIME}/publish/)
 
     set_target_properties(${name}
         PROPERTIES
