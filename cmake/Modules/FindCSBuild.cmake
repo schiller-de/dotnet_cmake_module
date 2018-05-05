@@ -26,7 +26,7 @@ endif()
 
 set(MSBUILD_TOOLSET "12.0" CACHE STRING "C# .NET framework")
 set(CSHARP_TARGET_FRAMEWORK_VERSION "2.0" CACHE STRING "C# .NET framework for msbuild and xbuild")
-set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0" CACHE STRING "C# .NET framework for dotnet")
+set(CSHARP_TARGET_FRAMEWORK "netstandard1.1" CACHE STRING "C# .NET framework for dotnet")
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(DOTNET_CORE_PLATFORM "linux")
