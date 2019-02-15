@@ -58,6 +58,29 @@ function(add_dotnet_executable _TARGET_NAME)
   )
 endfunction()
 
+function(add_dotnet_test _TARGET_NAME)
+  cmake_parse_arguments(_add_dotnet_test
+    ""
+    ""
+    "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES"
+    ${ARGN}
+  )
+
+  set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+  csharp_add_project(${_TARGET_NAME}
+    EXECUTABLE
+    SOURCES
+    ${_add_dotnet_test_SOURCES}
+    ${_add_dotnet_test_UNPARSED_ARGUMENTS}
+    INCLUDE_DLLS
+    ${_add_dotnet_test_INCLUDE_DLLS}
+    INCLUDE_NUPKGS
+    ${_add_dotnet_test_INCLUDE_NUPKGS}
+    INCLUDE_REFERENCES
+    ${_add_dotnet_test_INCLUDE_REFERENCES}
+  )
+endfunction()
+
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)
