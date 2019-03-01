@@ -15,7 +15,7 @@ function(csharp_add_project name)
     cmake_parse_arguments(_csharp_add_project
         "EXECUTABLE"
         ""
-        "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES"
+        "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES;TEST_DLL"
         ${ARGN}
     )
 
@@ -164,7 +164,8 @@ function(csharp_add_project name)
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${CMAKE_COMMAND}
-        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props"
+        -DCSHARP_BUILDER_OUTPUT_NAME="${name}${CSBUILD_OUTPUT_SUFFIX}"
+        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props.in"
         -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/Directory.Build.props"
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
@@ -176,6 +177,14 @@ function(csharp_add_project name)
         COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ} -> ${CURRENT_TARGET_BINARY_DIR}"
         DEPENDS ${sources_dep}
     )
+
+    if (${_csharp_add_project_TEST_DLL})
+        ament_add_test(
+          ${name}_test
+          GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+          COMMAND dotnet test "${CURRENT_TARGET_BINARY_DIR}/${CSBUILD_${name}_CSPROJ}"
+        )
+    endif()
 
     set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/${CSHARP_TARGET_FRAMEWORK}/${DOTNET_CORE_RUNTIME}/publish/)
 

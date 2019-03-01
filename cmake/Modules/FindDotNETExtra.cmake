@@ -78,7 +78,10 @@ function(add_dotnet_test _TARGET_NAME)
     ${_add_dotnet_test_INCLUDE_NUPKGS}
     INCLUDE_REFERENCES
     ${_add_dotnet_test_INCLUDE_REFERENCES}
+    TEST_DLL
+    1
   )
+
 endfunction()
 
 function(install_dotnet _TARGET_NAME)
