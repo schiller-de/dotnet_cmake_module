@@ -67,6 +67,12 @@ function(add_dotnet_test _TARGET_NAME)
   )
 
   set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+  set(XUNIT_INCLUDE_REFERENCES
+    "Microsoft.NET.Test.Sdk=15.9.0"
+    "xunit=2.4.1"
+    "xunit.runner.visualstudio=2.4.1"
+  )
+
   csharp_add_project(${_TARGET_NAME}
     EXECUTABLE
     SOURCES
@@ -78,6 +84,7 @@ function(add_dotnet_test _TARGET_NAME)
     ${_add_dotnet_test_INCLUDE_NUPKGS}
     INCLUDE_REFERENCES
     ${_add_dotnet_test_INCLUDE_REFERENCES}
+    ${XUNIT_INCLUDE_REFERENCES}
   )
 
   if(CSBUILD_PROJECT_DIR)
