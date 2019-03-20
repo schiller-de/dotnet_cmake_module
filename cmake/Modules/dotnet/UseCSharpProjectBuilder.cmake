@@ -15,7 +15,7 @@ function(csharp_add_project name)
     cmake_parse_arguments(_csharp_add_project
         "EXECUTABLE"
         ""
-        "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES;TEST_DLL"
+        "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES"
         ${ARGN}
     )
 
@@ -177,14 +177,6 @@ function(csharp_add_project name)
         COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ} -> ${CURRENT_TARGET_BINARY_DIR}/${name}"
         DEPENDS ${sources_dep}
     )
-
-    if (${_csharp_add_project_TEST_DLL})
-        ament_add_test(
-          ${name}_test
-          GENERATE_RESULT_FOR_RETURN_CODE_ZERO
-          COMMAND dotnet test "${CURRENT_TARGET_BINARY_DIR}/${name}/${CSBUILD_${name}_CSPROJ}"
-        )
-    endif()
 
     set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/${CSHARP_TARGET_FRAMEWORK}/${DOTNET_CORE_RUNTIME}/publish/)
 

@@ -78,8 +78,19 @@ function(add_dotnet_test _TARGET_NAME)
     ${_add_dotnet_test_INCLUDE_NUPKGS}
     INCLUDE_REFERENCES
     ${_add_dotnet_test_INCLUDE_REFERENCES}
-    TEST_DLL
-    1
+  )
+
+  if(CSBUILD_PROJECT_DIR)
+      set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CSBUILD_PROJECT_DIR}")
+  else()
+      set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+  endif()
+
+  ament_add_test(
+    ${name}_test
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+    WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${_TARGET_NAME}
+    COMMAND dotnet test "${CURRENT_TARGET_BINARY_DIR}/${_TARGET_NAME}/${_TARGET_NAME}_${CSBUILD_CSPROJ}"
   )
 
 endfunction()
