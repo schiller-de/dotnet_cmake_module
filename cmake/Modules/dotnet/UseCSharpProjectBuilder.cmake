@@ -166,7 +166,7 @@ function(csharp_add_project name)
         COMMAND ${CMAKE_COMMAND}
         -DCSHARP_BUILDER_OUTPUT_NAME="${name}${CSBUILD_OUTPUT_SUFFIX}"
         -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props.in"
-        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${name}/${name}$/Directory.Build.props"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${name}/${name}/Directory.Build.props"
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${RESTORE_CMD}
