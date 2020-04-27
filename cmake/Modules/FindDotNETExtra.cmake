@@ -58,6 +58,50 @@ function(add_dotnet_executable _TARGET_NAME)
   )
 endfunction()
 
+function(add_dotnet_test _TARGET_NAME)
+  cmake_parse_arguments(_add_dotnet_test
+    ""
+    ""
+    "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES"
+    ${ARGN}
+  )
+
+  set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+  set(XUNIT_INCLUDE_REFERENCES
+    "Microsoft.NET.Test.Sdk=15.9.0"
+    "xunit=2.4.1"
+    "xunit.runner.visualstudio=2.4.1"
+  )
+
+  csharp_add_project(${_TARGET_NAME}
+    EXECUTABLE
+    SOURCES
+    ${_add_dotnet_test_SOURCES}
+    ${_add_dotnet_test_UNPARSED_ARGUMENTS}
+    INCLUDE_DLLS
+    ${_add_dotnet_test_INCLUDE_DLLS}
+    INCLUDE_NUPKGS
+    ${_add_dotnet_test_INCLUDE_NUPKGS}
+    INCLUDE_REFERENCES
+    ${_add_dotnet_test_INCLUDE_REFERENCES}
+    ${XUNIT_INCLUDE_REFERENCES}
+  )
+
+  if(CSBUILD_PROJECT_DIR)
+      set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CSBUILD_PROJECT_DIR}")
+  else()
+      set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+  endif()
+
+  ament_add_test(
+    ${name}_test
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+    WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${_TARGET_NAME}
+    COMMAND dotnet test "${CURRENT_TARGET_BINARY_DIR}/${_TARGET_NAME}/${_TARGET_NAME}_${CSBUILD_CSPROJ}"
+  )
+
+endfunction()
+
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)

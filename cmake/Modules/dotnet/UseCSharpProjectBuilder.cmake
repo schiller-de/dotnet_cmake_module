@@ -11,7 +11,7 @@ function(csharp_add_project name)
         set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
     set(CSBUILD_PROJECT_DIR "")
-    file(MAKE_DIRECTORY ${CURRENT_TARGET_BINARY_DIR})
+    file(MAKE_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${name})
     cmake_parse_arguments(_csharp_add_project
         "EXECUTABLE"
         ""
@@ -41,10 +41,10 @@ function(csharp_add_project name)
         list(GET PACKAGE_ID 1 PACKAGE_VERSION)
         list(APPEND packages "<PackageReference;Include=\\\"${PACKAGE_NAME}\\\";Version=\\\"${PACKAGE_VERSION}\\\";/>")
         list(APPEND legacy_packages "<package;id=\\\"${PACKAGE_NAME}\\\";version=\\\"${PACKAGE_VERSION}\\\";/>")
-        file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${PACKAGE_NAME}.${PACKAGE_VERSION}/lib/**/*.dll" hint_path)
+        file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${name}/${PACKAGE_NAME}.${PACKAGE_VERSION}/lib/**/*.dll" hint_path)
         list(APPEND refs "<Reference;Include=\\\"${hint_path}\\\";></Reference>")
 
-        file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${PACKAGE_NAME}.${PACKAGE_VERSION}/build/${PACKAGE_NAME}.targets" target_path)
+        file(TO_NATIVE_PATH "${CURRENT_TARGET_BINARY_DIR}/${name}/${PACKAGE_NAME}.${PACKAGE_VERSION}/build/${PACKAGE_NAME}.targets" target_path)
         list(APPEND imports "<Import;Project=\\\"${target_path}\\\";Condition=\\\"Exists('${target_path}')\\\";/>")
     endforeach()
 
@@ -154,26 +154,27 @@ function(csharp_add_project name)
         -DMSBUILD_TOOLSET="${MSBUILD_TOOLSET}"
         -DCSHARP_IMPORTS="${CSHARP_IMPORTS}"
         -DCONFIG_INPUT_FILE="${CSBUILD_CSPROJ_IN}"
-        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${CSBUILD_${name}_CSPROJ}"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${name}/${CSBUILD_${name}_CSPROJ}"
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${CMAKE_COMMAND}
         -DCSHARP_PACKAGE_REFERENCES="${CSHARP_LEGACY_PACKAGE_REFERENCES}"
         -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/packages.config.in"
-        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/packages.config"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${name}/packages.config"
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${CMAKE_COMMAND}
-        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props"
-        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/Directory.Build.props"
+        -DCSHARP_BUILDER_OUTPUT_NAME="${name}${CSBUILD_OUTPUT_SUFFIX}"
+        -DCONFIG_INPUT_FILE="${dotnet_cmake_module_DIR}/Modules/dotnet/Directory.Build.props.in"
+        -DCONFIG_OUTPUT_FILE="${CURRENT_TARGET_BINARY_DIR}/${name}/Directory.Build.props"
         -P ${dotnet_cmake_module_DIR}/ConfigureFile.cmake
 
         COMMAND ${RESTORE_CMD}
 
         COMMAND ${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}
         COMMAND ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ}
-        WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}
-        COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ} -> ${CURRENT_TARGET_BINARY_DIR}"
+        WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${name}
+        COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${CSBUILD_${name}_CSPROJ}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${CSBUILD_${name}_CSPROJ} -> ${CURRENT_TARGET_BINARY_DIR}/${name}"
         DEPENDS ${sources_dep}
     )
 
