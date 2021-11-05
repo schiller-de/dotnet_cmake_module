@@ -210,7 +210,7 @@ function(csharp_add_existing_project name)
 
     foreach(it ${_csharp_add_existing_project_INCLUDE_DLLS})
         file(TO_NATIVE_PATH ${it} nit)
-        list(APPEND refs "    <Reference Include=\"${nit}\";/>\n")
+        list(APPEND refs "    <Reference Include=\"${nit}\"/>\n")
     endforeach()
 
     list(LENGTH refs REFERENCE_COUNT)
@@ -232,21 +232,9 @@ function(csharp_add_existing_project name)
     file(TO_NATIVE_PATH ${CSHARP_BUILDER_OUTPUT_PATH} CSHARP_BUILDER_OUTPUT_PATH_NATIVE)
 
     # TODO: add to add_custom_target to avoid writing every time
-    file(WRITE ${_csharp_add_existing_project_PROPS_PATH}
-        "<Project>\n"
-        "  <ItemGroup>\n"
-        ${refs_concat}
-        "  </ItemGroup>\n"
-        "  <PropertyGroup>\n"
-        "    <OutputPath>"
-        ${CSHARP_BUILDER_OUTPUT_PATH_NATIVE}
-        "</OutputPath>\n"
-        "<AssemblyName>"
-        ${_TARGET_NAME}
-        "</AssemblyName>\n"
-        "  </PropertyGroup>"
-        "</Project>\n"
-    )
+    string (REPLACE ";" "" CSHARP_BUILDER_INCLUDE_DLLS_STR "${refs_concat}")
+    set(CSHARP_BUILDER_INCLUDE_DLLS ${refs_concat})
+    configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/CMake.g.props.in ${_csharp_add_existing_project_PROPS_PATH} @ONLY)
 
     if(${_csharp_add_existing_project_EXECUTABLE} AND NOT DOTNET_CORE_FOUND)
         set(ext "exe")

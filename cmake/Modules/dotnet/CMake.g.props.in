@@ -1,0 +1,8 @@
+<Project>
+  <ItemGroup>
+@CSHARP_BUILDER_INCLUDE_DLLS_STR@  </ItemGroup>
+  <PropertyGroup>
+    <OutputPath>@CSHARP_BUILDER_OUTPUT_PATH_NATIVE@</OutputPath>
+    <AssemblyName>@_TARGET_NAME@</AssemblyName>
+  </PropertyGroup>
+</Project>
