@@ -192,3 +192,94 @@ function(csharp_add_project name)
         ${DOTNET_CORE_FOUND}
     )
 endfunction()
+
+function(csharp_add_existing_project name)
+    if(CSBUILD_PROJECT_DIR)
+        set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CSBUILD_PROJECT_DIR}")
+    else()
+        set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+    endif()
+    set(CSBUILD_PROJECT_DIR "")
+    file(MAKE_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${name})
+    cmake_parse_arguments(_csharp_add_existing_project
+        "EXECUTABLE"
+        ""
+        "PROJ;INCLUDE_DLLS"
+        ${ARGN}
+    )
+
+    foreach(it ${_csharp_add_existing_project_INCLUDE_DLLS})
+        file(TO_NATIVE_PATH ${it} nit)
+        list(APPEND refs "    <Reference Include=\"${nit}\";/>\n")
+    endforeach()
+
+    list(LENGTH refs REFERENCE_COUNT)
+
+    if(REFERENCE_COUNT GREATER 0)
+        set(refs_concat "${refs}")
+    else()
+        set(refs_concat "")
+    endif()
+
+    get_filename_component(_csharp_add_existing_project_PROJ_PATH ${_csharp_add_existing_project_PROJ} DIRECTORY)
+    get_filename_component(_csharp_add_existing_project_PROJ_PATH_ABSOLUTE ${_csharp_add_existing_project_PROJ_PATH} ABSOLUTE)
+
+    get_filename_component(_csharp_add_existing_project_PROJ_ABSOLUTE ${_csharp_add_existing_project_PROJ} ABSOLUTE)
+
+    set(_csharp_add_existing_project_PROPS_PATH ${_csharp_add_existing_project_PROJ_PATH_ABSOLUTE}/obj/CMake.g.props)
+
+    set(CSHARP_BUILDER_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+    file(TO_NATIVE_PATH ${CSHARP_BUILDER_OUTPUT_PATH} CSHARP_BUILDER_OUTPUT_PATH_NATIVE)
+
+    # TODO: add to add_custom_target to avoid writing every time
+    file(WRITE ${_csharp_add_existing_project_PROPS_PATH}
+        "<Project>\n"
+        "  <ItemGroup>\n"
+        ${refs_concat}
+        "  </ItemGroup>\n"
+        "  <PropertyGroup>\n"
+        "    <OutputPath>"
+        ${CSHARP_BUILDER_OUTPUT_PATH_NATIVE}
+        "</OutputPath>\n"
+        "<AssemblyName>"
+        ${_TARGET_NAME}
+        "</AssemblyName>\n"
+        "  </PropertyGroup>"
+        "</Project>\n"
+    )
+
+    if(${_csharp_add_existing_project_EXECUTABLE} AND NOT DOTNET_CORE_FOUND)
+        set(ext "exe")
+    else()
+        set(ext "dll")
+    endif()
+
+    add_custom_target(
+        ${name} ALL
+
+        COMMAND ${RESTORE_CMD}
+
+        COMMAND ${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${_csharp_add_existing_project_PROJ_ABSOLUTE}
+        COMMAND ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${_csharp_add_existing_project_PROJ_ABSOLUTE}
+        WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${name}
+        COMMENT "${RESTORE_CMD};${CSBUILD_EXECUTABLE} ${CSBUILD_RESTORE_FLAGS} ${_csharp_add_existing_project_PROJ_ABSOLUTE}; ${CSBUILD_EXECUTABLE} ${CSBUILD_BUILD_FLAGS} ${_csharp_add_existing_project_PROJ_ABSOLUTE} -> ${CURRENT_TARGET_BINARY_DIR}/${name}"
+
+        # TODO: How to deal with changes to *.cs files (Implicit include in *.csproj)
+        # DEPENDS ${sources_dep}
+        DEPENDS ${_csharp_add_existing_project_PROJ_ABSOLUTE}
+    )
+
+    set(DOTNET_OUTPUT_PATH ${CSHARP_BUILDER_OUTPUT_PATH}/${CSHARP_TARGET_FRAMEWORK}/${DOTNET_CORE_RUNTIME}/publish/)
+
+    set_target_properties(${name}
+        PROPERTIES
+        EXECUTABLE
+        ${_csharp_add_existing_project_EXECUTABLE}
+        OUTPUT_PATH
+        ${DOTNET_OUTPUT_PATH}
+        OUTPUT_NAME
+        ${name}${CSBUILD_OUTPUT_SUFFIX}.${ext}
+        DOTNET_CORE
+        ${DOTNET_CORE_FOUND}
+    )
+endfunction()

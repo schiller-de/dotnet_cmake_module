@@ -107,6 +107,24 @@ function(add_dotnet_test _TARGET_NAME)
 
 endfunction()
 
+function(add_dotnet_project _TARGET_NAME)
+  cmake_parse_arguments(_add_dotnet_project
+    ""
+    ""
+    "PROJ;INCLUDE_DLLS"
+    ${ARGN}
+  )
+
+  csharp_add_existing_project(${_TARGET_NAME}
+    EXECUTABLE
+    PROJ
+    ${_add_dotnet_project_PROJ}
+    ${_add_dotnet_project_UNPARSED_ARGUMENTS}
+    INCLUDE_DLLS
+    ${_add_dotnet_project_INCLUDE_DLLS}
+  )
+endfunction()
+
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)
