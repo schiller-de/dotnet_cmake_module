@@ -120,6 +120,44 @@ function(add_dotnet_project _TARGET_NAME)
   )
 endfunction()
 
+function(add_dotnet_test_project _TARGET_NAME)
+  # TODO: (sh) It seems the test project gets build twice with different output directories
+  # e.g.: the same output files are contained in "build/<package>/<target>/net6.0/" and "build/<package>/<target>/net6.0/linux-x64"
+  # But this seems to be the case with other projects as well (package rcldotnet and targets rcldotnet_assemblies and test_messages).
+  # So maybe this is how it should be, but why?
+
+  cmake_parse_arguments(_add_dotnet_test_project
+    ""
+    ""
+    "PROJ;INCLUDE_DLLS"
+    ${ARGN}
+  )
+
+  csharp_add_existing_project(${_TARGET_NAME}
+    EXECUTABLE
+    PROJ
+    ${_add_dotnet_test_project_PROJ}
+    ${_add_dotnet_test_project_UNPARSED_ARGUMENTS}
+    INCLUDE_DLLS
+    ${_add_dotnet_test_project_INCLUDE_DLLS}
+  )
+
+  if(CSBUILD_PROJECT_DIR)
+    set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/${CSBUILD_PROJECT_DIR}")
+  else()
+    set(CURRENT_TARGET_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}")
+  endif()
+
+  get_filename_component(_add_dotnet_test_project_PROJ_ABSOLUTE ${_add_dotnet_test_project_PROJ} ABSOLUTE)
+
+  ament_add_test(
+    ${_TARGET_NAME}
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+    WORKING_DIRECTORY ${CURRENT_TARGET_BINARY_DIR}/${_TARGET_NAME}
+    COMMAND dotnet test ${_add_dotnet_test_project_PROJ_ABSOLUTE}
+  )
+endfunction()
+
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)
