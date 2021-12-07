@@ -228,7 +228,7 @@ function(csharp_add_existing_project name)
 
     set(_csharp_add_existing_project_PROPS_PATH ${_csharp_add_existing_project_PROJ_PATH_ABSOLUTE}/obj/CMake.g.props)
 
-    set(CSHARP_BUILDER_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_BUILD_TYPE})
+    set(CSHARP_BUILDER_OUTPUT_PATH ${CMAKE_CURRENT_BINARY_DIR}/${name}/${CMAKE_BUILD_TYPE})
     file(TO_NATIVE_PATH ${CSHARP_BUILDER_OUTPUT_PATH} CSHARP_BUILDER_OUTPUT_PATH_NATIVE)
 
     # TODO: add to add_custom_target to avoid writing every time
