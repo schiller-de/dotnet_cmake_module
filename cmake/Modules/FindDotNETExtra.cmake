@@ -175,6 +175,8 @@ function(add_dotnet_test_project _TARGET_NAME)
   )
 endfunction()
 
+# TODO: Add an argument to name the entry point different than the target.
+#       Renaming the target in the *.csproj does cause issues with ASP.NET
 function(install_dotnet _TARGET_NAME)
     get_target_property(_target_executable ${_TARGET_NAME} EXECUTABLE)
     get_target_property(_target_path ${_TARGET_NAME} OUTPUT_PATH)
@@ -185,7 +187,7 @@ function(install_dotnet _TARGET_NAME)
       set (_DESTINATION ${ARGV1})
     else()
       cmake_parse_arguments(_install_dotnet
-        ""
+        "CD_TO_EXECUTABLE"
         "DESTINATION"
         ""
         ${ARGN})
@@ -200,12 +202,20 @@ function(install_dotnet _TARGET_NAME)
     if(_target_executable)
       set(DOTNET_DLL_PATH ${_target_name})
       if(WIN32)
-        configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.windows.in lib/${_TARGET_NAME}.bat @ONLY)
+        if (_install_dotnet_CD_TO_EXECUTABLE)
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point_with_cd.windows.in lib/${_TARGET_NAME}.bat @ONLY)
+        else()
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.windows.in lib/${_TARGET_NAME}.bat @ONLY)
+        endif()
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}.bat
           DESTINATION
           lib/${PROJECT_NAME})
       else()
-        configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.unix.in lib/${_TARGET_NAME} @ONLY)
+        if (_install_dotnet_CD_TO_EXECUTABLE)
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point_with_cd.unix.in lib/${_TARGET_NAME} @ONLY)
+        else()
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.unix.in lib/${_TARGET_NAME} @ONLY)
+        endif()
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}
           DESTINATION
           lib/${PROJECT_NAME}
