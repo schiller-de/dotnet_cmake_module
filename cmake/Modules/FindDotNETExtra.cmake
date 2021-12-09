@@ -107,8 +107,25 @@ function(add_dotnet_test _TARGET_NAME)
 
 endfunction()
 
-function(add_dotnet_project _TARGET_NAME)
-  cmake_parse_arguments(_add_dotnet_project
+function(add_dotnet_library_project _TARGET_NAME)
+  cmake_parse_arguments(_add_dotnet_library_project
+    ""
+    ""
+    "PROJ;INCLUDE_DLLS"
+    ${ARGN}
+  )
+
+  csharp_add_existing_project(${_TARGET_NAME}
+    PROJ
+    ${_add_dotnet_library_project_PROJ}
+    ${_add_dotnet_library_project_UNPARSED_ARGUMENTS}
+    INCLUDE_DLLS
+    ${_add_dotnet_library_project_INCLUDE_DLLS}
+  )
+endfunction()
+
+function(add_dotnet_executable_project _TARGET_NAME)
+  cmake_parse_arguments(_add_dotnet_executable_project
     ""
     ""
     "PROJ;INCLUDE_DLLS"
@@ -118,10 +135,10 @@ function(add_dotnet_project _TARGET_NAME)
   csharp_add_existing_project(${_TARGET_NAME}
     EXECUTABLE
     PROJ
-    ${_add_dotnet_project_PROJ}
-    ${_add_dotnet_project_UNPARSED_ARGUMENTS}
+    ${_add_dotnet_executable_project_PROJ}
+    ${_add_dotnet_executable_project_UNPARSED_ARGUMENTS}
     INCLUDE_DLLS
-    ${_add_dotnet_project_INCLUDE_DLLS}
+    ${_add_dotnet_executable_project_INCLUDE_DLLS}
   )
 endfunction()
 
