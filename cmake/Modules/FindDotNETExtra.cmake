@@ -61,12 +61,17 @@ endfunction()
 function(add_dotnet_test _TARGET_NAME)
   cmake_parse_arguments(_add_dotnet_test
     ""
-    ""
+    "TARGET_FRAMEWORK"
     "SOURCES;INCLUDE_DLLS;INCLUDE_NUPKGS;INCLUDE_REFERENCES"
     ${ARGN}
   )
 
-  set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+  if(_add_dotnet_test_TARGET_FRAMEWORK)
+    set(CSHARP_TARGET_FRAMEWORK ${_add_dotnet_test_TARGET_FRAMEWORK})
+  else()
+    set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+  endif()
+
   set(XUNIT_INCLUDE_REFERENCES
     "Microsoft.NET.Test.Sdk=15.9.0"
     "xunit=2.4.1"
