@@ -69,7 +69,7 @@ function(add_dotnet_test _TARGET_NAME)
   if(_add_dotnet_test_TARGET_FRAMEWORK)
     set(CSHARP_TARGET_FRAMEWORK ${_add_dotnet_test_TARGET_FRAMEWORK})
   else()
-    set(CSHARP_TARGET_FRAMEWORK "netcoreapp2.0")
+    set(CSHARP_TARGET_FRAMEWORK "net6.0")
   endif()
 
   set(XUNIT_INCLUDE_REFERENCES
