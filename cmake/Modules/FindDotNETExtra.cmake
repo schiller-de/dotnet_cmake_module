@@ -117,8 +117,8 @@ function(install_dotnet _TARGET_NAME)
       set (_DESTINATION ${ARGV1})
     else()
       cmake_parse_arguments(_install_dotnet
-        ""
-        "DESTINATION"
+        "CD_TO_EXECUTABLE"
+        "DESTINATION;ENTRY_POINT_NAME"
         ""
         ${ARGN})
       if (_install_dotnet_DESTINATION)
@@ -130,15 +130,29 @@ function(install_dotnet _TARGET_NAME)
     install(DIRECTORY ${_target_path}/ DESTINATION ${_DESTINATION})
 
     if(_target_executable)
+      if (_install_dotnet_ENTRY_POINT_NAME)
+        set(_ENTRY_POINT_NAME ${_install_dotnet_ENTRY_POINT_NAME})
+      else()
+        # default to _TARGET_NAME
+        set(_ENTRY_POINT_NAME ${_TARGET_NAME})
+      endif()
       set(DOTNET_DLL_PATH ${_target_name})
       if(WIN32)
-        configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.windows.in lib/${_TARGET_NAME}.bat @ONLY)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}.bat
+        if (_install_dotnet_CD_TO_EXECUTABLE)
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point_with_cd.windows.in lib/${_ENTRY_POINT_NAME}.bat @ONLY)
+        else()
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.windows.in lib/${_ENTRY_POINT_NAME}.bat @ONLY)
+        endif()
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_ENTRY_POINT_NAME}.bat
           DESTINATION
           lib/${PROJECT_NAME})
       else()
-        configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.unix.in lib/${_TARGET_NAME} @ONLY)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_TARGET_NAME}
+        if (_install_dotnet_CD_TO_EXECUTABLE)
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point_with_cd.unix.in lib/${_ENTRY_POINT_NAME} @ONLY)
+        else()
+          configure_file(${dotnet_cmake_module_DIR}/Modules/dotnet/entry_point.unix.in lib/${_ENTRY_POINT_NAME} @ONLY)
+        endif()
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/lib/${_ENTRY_POINT_NAME}
           DESTINATION
           lib/${PROJECT_NAME}
           PERMISSIONS
