@@ -51,6 +51,8 @@ if(MSVC)
     endif()
 elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "arm")
     set(DOTNET_CORE_ARCH "arm")
+elseif(CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64")
+    set(DOTNET_CORE_ARCH "arm64")
 endif()
 
 if(NOT DOTNET_CORE_ARCH)
